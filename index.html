@@ -1,0 +1,116 @@
+<!-- <!DOCTYPE html>
+<html>
+
+<body>
+    <!-- <img id="image" src="/lego.png" height="100px"> -->
+<!-- <img id="color"
+        src="https://www.lactame.com/github/image-js/image-js/3073b80c7d626196cb669f9d617f491a8338ca66/test/img/taxi/original.jpeg" />
+    <img id="result" />
+    <script src="https://www.lactame.com/lib/image-js/0.21.2/image.min.js"></script>
+    <script>
+        async function process() {
+            let image = await IJS.Image.load(document.getElementById('color').src);
+
+            console.log(image);
+
+            // document.getElementById('result').src = grey.toDataURL();
+        }
+        process();
+    </script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/camanjs/4.0.0/caman.full.min.js"></script>
+
+    <img id="SourceImage" src="image.jpg">
+    <div class="video-container"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
+
+
+<html> -->
+
+<head>
+    <script src="https://www.lactame.com/lib/image-js/0.21.2/image.min.js"></script>
+</head>
+
+<body>
+    <img id="color"
+        src="https://www.lactame.com/github/image-js/image-js/3073b80c7d626196cb669f9d617f491a8338ca66/test/img/taxi/original.jpeg" />
+    <img id='result' />
+
+    <script src="kmeans.js">
+        class Pixel {
+            /*
+                A class used to store individual pixels in their RGB values
+            */
+            rgb = [0,0,0]
+            setPixel = function(red,green,blue){
+                this.rgb = [red,green,blue];
+            }
+            constructor(red,green,blue){
+                this.setPixel(red,green,blue);
+            }  
+        }
+
+        class Image {
+            /*
+                A class used specifically to decompose image.js images into pixel grids
+            */
+            height = 0;
+            width = 0;
+            pixels = [];
+            constructor(image){
+                this.height = image.height;
+                this.width = image.width;
+
+                // set row to -1 so when it is incremented during the first row it is set to zero
+                let row = -1
+
+                // loop through the size of the image. column doesn't actually refer to the column num, rather column%this.height does
+                for(let column = 0; column < this.width*this.height; ++column){
+                    if(column%this.height == 0){
+                        row++
+                        this.pixels.push([])
+                    }
+                    this.pixels[row][column%this.height] = new Pixel(4*column,4*column+1,4*column+2)
+                }
+            }
+        }
+
+        
+
+
+
+        async function process() {
+            // load image RGB data
+            let imageData = await IJS.Image.load(document.getElementById('color').src)
+            let image = new Image(imageData);
+            
+
+
+
+
+
+
+            // old code
+            // let image = await IJS.Image.load(document.getElementById('color').src)
+            // rawRGBA = image.getRGBAData()
+            // console.log(image.height)
+            // console.log(image.width)
+            // console.log(image.height*image.width, rawRGBA.length/4)
+
+
+
+            // for (let i = 0; i < image.size; ++i) {
+            //     image.setPixel(i, [255, 255, 0, 255])
+            // }
+
+            // document.getElementById('result').src = image.toDataURL();
+        }
+        process();
+    </script>
+
+</body>
+
+</html>
