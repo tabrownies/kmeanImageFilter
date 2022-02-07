@@ -1,139 +1,252 @@
-/* taken from https://github.com/stevemacn/kmeans/blob/master/lib/kmeans.js */
+// script taken from https://medium.com/geekculture/implementing-k-means-clustering-from-scratch-in-javascript-13d71fbcb31e
 
 
-// kmeans.js 0.0.1
+const MAX_ITERATIONS = 50;
 
-//The kmeans clustering algorithm relies upon knowing in advance
-//the number of clusters in which to place vectors. 
-
-// Initialize
-// ----------
-function Kmeans (vector, k, callback) {
-    //**Vector:** array of arrays. Inner array
-    //represents a multidimensional data point (vector)  
-    //*These should be normalized*
-    this.callback = callback
-    this.vector = vector 
-    //**K:** represents the number of groups/clusters into 
-    //which the vectors will be grouped
-    this.k = k
-    //Initialize the centroids and clusters     
-    //**Centroids:** represent the center of each cluster. 
-    //They are taken by averaging each dimension of the vectors
-    this.centroids = new Array(k)
-    this.cluster = new Array(k) 
-
-    //Create centroids and place them randomly because 
-    //we don't yet know where the vectors are most concentrated
-    this.createCentroids()
-    var count = 0
-        , notFinished = true
-    
-    this.iterate(this.centroids.slice(0))
+function randomBetween(min, max) {
+  return Math.floor(
+    Math.random() * (max - min) + min
+  );
 }
 
-// Assign vector to each centroid
-// ----------
-// Randomly choose **k** vectors from the vector 
-// array **vector**. These represent our guess 
-// at where clusters may exist. 
-Kmeans.prototype.createCentroids = function () {
-    var randomArray = this.vector.slice(0)
-    var self = this
-    randomArray.sort(function() {
-        return (Math.floor(Math.random() * self.vector.length))
-    });
-    this.centroids = randomArray.slice(0, this.k);
+function calcMeanCentroid(dataSet, start, end) {
+  const features = dataSet[0].length;
+  const n = end - start;
+  let mean = [];
+  for (let i = 0; i < features; i++) {
+    mean.push(0);
+  }
+  for (let i = start; i < end; i++) {
+    for (let j = 0; j < features; j++) {
+      mean[j] = mean[j] + dataSet[i][j] / n;
+    }
+  }
+  return mean;
 }
 
-// Recursively cluster and move the centroids
-// ----------
-//This method groups vectors into clusters and then determine the 
-//the new location for each centroid based upon the mean
-//location of the vectors in the cooresponding cluster
-Kmeans.prototype.iterate = function (vecArray) {
-   
-    this.cluster = new Array(this.k) 
-    
-    var tempArray = []    
-    for (var a=0; a<this.vector[0].length; a++) {
-        tempArray.push(0)
+function getRandomCentroidsNaiveSharding(dataset, k) {
+  // implementation of a variation of naive sharding centroid initialization method
+  // (not using sums or sorting, just dividing into k shards and calc mean)
+  // https://www.kdnuggets.com/2017/03/naive-sharding-centroid-initialization-method.html
+  const numSamples = dataset.length;
+  // Divide dataset into k shards:
+  const step = Math.floor(numSamples / k);
+  const centroids = [];
+  for (let i = 0; i < k; i++) {
+    const start = step * i;
+    let end = step * (i + 1);
+    if (i + 1 === k) {
+      end = numSamples;
     }
-    var vecArray = []
-    for (var a=0; a<this.k; a++) {
-        vecArray[a] = (tempArray.slice(0))
-    }
-    //Group each vector to a cluster based upon the 
-    //cooresponding centroid
-    for (i in this.vector) {
-        var v = this.vector[i].slice(0)
-        var index = this.assignCentroid(v)
-        
-        if (!this.cluster[index]) this.cluster[index]=[]
-            this.cluster[index].push(v)
+    centroids.push(calcMeanCentroid(dataset, start, end));
+  }
+  return centroids;
+}
 
-        for (var a=0; a<v.length; a++){
-            vecArray[index][a]+=v[a] //keep a sum for cluster
+function getRandomCentroids(dataset, k) {
+  // selects random points as centroids from the dataset
+  const numSamples = dataset.length;
+  const centroidsIndex = [];
+  let index;
+  while (centroidsIndex.length < k) {
+    index = randomBetween(0, numSamples);
+    if (centroidsIndex.indexOf(index) === -1) {
+      centroidsIndex.push(index);
+    }
+  }
+  const centroids = [];
+  for (let i = 0; i < centroidsIndex.length; i++) {
+    const centroid = [...dataset[centroidsIndex[i]]];
+    centroids.push(centroid);
+  }
+  return centroids;
+}
+
+function compareCentroids(a, b) {
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function shouldStop(oldCentroids, centroids, iterations) {
+  if (iterations > MAX_ITERATIONS) {
+    return true;
+  }
+  if (!oldCentroids || !oldCentroids.length) {
+    return false;
+  }
+  let sameCount = true;
+  for (let i = 0; i < centroids.length; i++) {
+    if (!compareCentroids(centroids[i], oldCentroids[i])) {
+      sameCount = false;
+    }
+  }
+  return sameCount;
+}
+
+// Calculate Squared Euclidean Distance
+function getDistanceSQ(a, b) {
+  const diffs = [];
+  for (let i = 0; i < a.length; i++) {
+    diffs.push(a[i] - b[i]);
+  }
+  return diffs.reduce((r, e) => (r + (e * e)), 0);
+}
+
+// Returns a label for each piece of data in the dataset. 
+function getLabels(dataSet, centroids) {
+  // prep data structure:
+  const labels = {};
+  for (let c = 0; c < centroids.length; c++) {
+    labels[c] = {
+      points: [],
+      centroid: centroids[c],
+    };
+  }
+  // For each element in the dataset, choose the closest centroid. 
+  // Make that centroid the element's label.
+  for (let i = 0; i < dataSet.length; i++) {
+    const a = dataSet[i];
+    let closestCentroid, closestCentroidIndex, prevDistance;
+    for (let j = 0; j < centroids.length; j++) {
+      let centroid = centroids[j];
+      if (j === 0) {
+        closestCentroid = centroid;
+        closestCentroidIndex = j;
+        prevDistance = getDistanceSQ(a, closestCentroid);
+      } else {
+        // get distance:
+        const distance = getDistanceSQ(a, centroid);
+        if (distance < prevDistance) {
+          prevDistance = distance;
+          closestCentroid = centroid;
+          closestCentroidIndex = j;
         }
+      }
     }
-
-    //Calculate the mean values for each cluster.
-    var distance 
-        , max = 0 
-   
-    for (var a=0; a<this.k; a++) {
-        
-        var clusterSize = 0 //cluster is empty
-        if (this.cluster[a]) clusterSize = this.cluster[a].length
-        
-        for (b in vecArray[a]) {
-            vecArray[a][b] = vecArray[a][b]/clusterSize
-        }
-        distance = this.distance(vecArray[a], this.centroids[a])
-        if (distance>max) 
-            max=distance
-    }
-    
-    if (max<=0.5)
-        return this.callback(null, this.cluster, this.centroids)
-       
-    //For each centroid use the mean calculated for the 
-    //corresponding cluster (effectively "moving" the centroid
-    //to its new "location")
-    for (z in vecArray) {
-        this.centroids[z] = vecArray[z].slice(0)
-    }
-    this.iterate(vecArray)
-
+    // add point to centroid labels:
+    // console.log(closestCentroid)
+    labels[closestCentroidIndex].points.push(a);
+  }
+  return labels;
 }
 
 
-// Determine the closest centroid to a vector
-// ----------
-Kmeans.prototype.assignCentroid = function (point) {
-    var min = Infinity
-        , res = 0
-
-    //For each vector we determine the distance to the 
-    //nearest centroid. The vector is assigned to the 
-    //cluster that corresponds to the nearest centroid.
-    for (i in this.centroids) {
-        dist = this.distance(point, this.centroids[i])
-        if (dist < min) {
-            min = dist
-            res = i       
-        }
+// Returns a label for each piece of data in the dataset. 
+function getLabelsIndex(dataSet, centroids) {
+    // prep data structure:
+    const labels = {};
+    for (let c = 0; c < centroids.length; c++) {
+      labels[c] = {
+        points: [],
+        centroid: centroids[c],
+      };
     }
-    return res
+    // For each element in the dataset, choose the closest centroid. 
+    // Make that centroid the element's label.
+    for (let i = 0; i < dataSet.length; i++) {
+      const a = dataSet[i];
+      let closestCentroid, closestCentroidIndex, prevDistance;
+      for (let j = 0; j < centroids.length; j++) {
+        let centroid = centroids[j];
+        if (j === 0) {
+          closestCentroid = centroid;
+          closestCentroidIndex = j;
+          prevDistance = getDistanceSQ(a, closestCentroid);
+        } else {
+          // get distance:
+          const distance = getDistanceSQ(a, centroid);
+          if (distance < prevDistance) {
+            prevDistance = distance;
+            closestCentroid = centroid;
+            closestCentroidIndex = j;
+          }
+        }
+      }
+      // add point to centroid labels:
+      // console.log(closestCentroid)
+      labels[closestCentroidIndex].points.push(i);
+    }
+    return labels;
+  }
+
+function getPointsMean(pointList) {
+  const totalPoints = pointList.length;
+  const means = [];
+  for (let j = 0; j < pointList[0].length; j++) {
+    means.push(0);
+  }
+  for (let i = 0; i < pointList.length; i++) {
+    const point = pointList[i];
+    for (let j = 0; j < point.length; j++) {
+      const val = point[j];
+      means[j] = means[j] + val / totalPoints;
+    }
+  }
+  return means;
 }
 
-// Calculate euclidian distance between vectors
-// ----------
-Kmeans.prototype.distance = function(v1, v2) {
-    var total = 0
-    for (c in v1) {
-        if (c!=0)
-        total += Math.pow(v2[c]-v1[c], 2)
+function recalculateCentroids(dataSet, labels, k) {
+  // Each centroid is the geometric mean of the points that
+  // have that centroid's label. Important: If a centroid is empty (no points have
+  // that centroid's label) you should randomly re-initialize it.
+  let newCentroid;
+  const newCentroidList = [];
+  for (const k in labels) {
+    const centroidGroup = labels[k];
+    if (centroidGroup.points.length > 0) {
+      // find mean:
+      newCentroid = getPointsMean(centroidGroup.points);
+    } else {
+      // get new random centroid
+      newCentroid = getRandomCentroids(dataSet, 1)[0];
     }
-    return Math.sqrt(total)
+    newCentroidList.push(newCentroid);
+  }
+  return newCentroidList;
+}
+
+function kmeans(dataset, k, useNaiveSharding = true) {
+  if (dataset.length && dataset[0].length && dataset.length > k) {
+    // Initialize book keeping variables
+    let iterations = 0;
+    let oldCentroids, labels, centroids;
+
+    // Initialize centroids randomly
+    if (useNaiveSharding) {
+      centroids = getRandomCentroidsNaiveSharding(dataset, k);
+    } else {
+      centroids = getRandomCentroids(dataset, k);
+    }
+
+    // Run the main k-means algorithm
+    while (!shouldStop(oldCentroids, centroids, iterations)) {
+      // Save old centroids for convergence test.
+      oldCentroids = [...centroids];
+      iterations++;
+
+      // Assign labels to each datapoint based on centroids
+      labels = getLabelsIndex(dataset, centroids);
+      centroids = recalculateCentroids(dataset, getLabels(dataset,centroids), k);
+    }
+
+    const clusters = [];
+    for (let i = 0; i < k; i++) {
+      clusters.push(labels[i]);
+    }
+
+
+    const results = {
+      clusters: clusters,
+      centroids: centroids,
+      iterations: iterations,
+      converged: iterations <= MAX_ITERATIONS,
+    };
+    return results;
+  } else {
+    throw new Error('Invalid dataset');
+  }
 }
