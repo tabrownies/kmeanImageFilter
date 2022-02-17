@@ -5,11 +5,12 @@
     <script src="https://www.lactame.com/lib/image-js/0.21.2/image.min.js"></script>
     <script src="kmeans.js"></script>
 </head>
+
 <body>
-    <img id="color"
-        src="taxi.jpeg" />
+    <!-- <img id="color" src="taxi.jpeg" /> -->
     <img id='result' />
     <a download id="download-link">Download</a>
+    <input type="file" id="img" name="img" accept="image/*" onchange="process(this)">
     <script>
         console.log('script is running')
         class Image {
@@ -19,53 +20,63 @@
             height = 0;
             width = 0;
             pixels = [];
-            constructor(image){
+            constructor(image) {
                 this.height = image.height;
                 this.width = image.width;
                 let rawRGB = image.getRGBAData();
                 // loop through the pixels, which are listed in [r,g,b,a] repeatedly and sort into rgb pixel vectors
-                for(let column = 0; column < this.width*this.height; ++column){
-                    this.pixels.push([rawRGB[4*column],rawRGB[4*column+1],rawRGB[4*column+2]])
+                for (let column = 0; column < this.width * this.height; ++column) {
+                    this.pixels.push([rawRGB[4 * column], rawRGB[4 * column + 1], rawRGB[4 * column + 2]])
                 }
             }
-            cluster(k){
+            cluster(k) {
                 // cluster using kmeans and store
-                this.kmeans = kmeans(this.pixels,k);
+                this.kmeans = kmeans(this.pixels, k);
             }
         }
 
-        
 
 
 
-        async function process() {
-            // load image RGB data
-            let imageData = await IJS.Image.load(document.getElementById('color').src)
-            let image = new Image(imageData);
 
-            // cluster data
-            image.cluster(3)
+        async function process(input) {
+            let reader = new FileReader();
+            reader.onload = async function (e) {
+                console.log(e.target.result);
 
-            // image.kmeans.centroids[0] = [0,255,0]
-            // image.kmeans.centroids[1] = [0,0,255]
-            // image.kmeans.centroids[2] = [255,0,0]
+                let imageData = await IJS.Image.load(e.target.result)
+                let image = new Image(imageData);
 
-            // create new image based on cluster
+                // cluster data
+                image.cluster(20)
 
-            // go through each of the centroids
-            for (let c = 0; c < image.kmeans.clusters.length; ++c) {
-                // go through each point assigned to each centroid
-                for(i = 0; i < image.kmeans.clusters[c].points.length; ++i){
-                    imageData.setPixel(image.kmeans.clusters[c].points[i], [image.kmeans.centroids[c][0], image.kmeans.centroids[c][1], image.kmeans.centroids[c][2], 255])
+                // image.kmeans.centroids[0] = [0,255,0]
+                // image.kmeans.centroids[1] = [0,0,255]
+                // image.kmeans.centroids[2] = [255,0,0]
+
+                // create new image based on cluster
+
+                // go through each of the centroids
+                for (let c = 0; c < image.kmeans.clusters.length; ++c) {
+                    // go through each point assigned to each centroid
+                    for (i = 0; i < image.kmeans.clusters[c].points.length; ++i) {
+                        imageData.setPixel(image.kmeans.clusters[c].points[i], [image.kmeans.centroids[c][0],
+                            image.kmeans.centroids[c][1], image.kmeans.centroids[c][2], 255
+                        ])
+                    }
+
                 }
-                
-            }
 
-            // use new image url for both the image and the link for the download
-            document.getElementById('result').src = imageData.toDataURL();
-            document.getElementById('download-link').href = imageData.toDataURL();
+                // use new image url for both the image and the link for the download
+                document.getElementById('result').src = imageData.toDataURL();
+                document.getElementById('download-link').href = imageData.toDataURL();
+
+            }
+            reader.readAsDataURL(input.files[0]);
+            // load image RGB data
+
         }
-        process();
+        // process();
     </script>
 
 </body>
