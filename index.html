@@ -44,7 +44,11 @@
             let image = new Image(imageData);
 
             // cluster data
-            image.cluster(6)
+            image.cluster(3)
+
+            // image.kmeans.centroids[0] = [0,255,0]
+            // image.kmeans.centroids[1] = [0,0,255]
+            // image.kmeans.centroids[2] = [255,0,0]
 
             // create new image based on cluster
 
