@@ -2,10 +2,18 @@
 <html>
 
 <head>
-    
+    <link href="hex.css" type="text/css" rel="stylesheet">
 </head>
 
 <body>
+    <div class="chooser">
+        <input type="color" class="color" value="#c8FFFF" onchange="test1.changeByDynamicInput()"></input>
+        <p class="value">
+            R:<input class="R" value="200" type="number" onchange="test1.changeByTextInput(event.value, 'r')">
+            G:<input class="G" value="255" type="number" onchange="test1.changeByTextInput(event.value, 'g')">
+            B:<input class="B" value="255" type="number" onchange="test1.changeByTextInput(event.value, 'b')">
+        </p>
+    </div>
     <!-- <img id="color" src="taxi.jpeg" /> -->
     <img id='result' />
     <a download id="download-link">Download</a>
@@ -13,13 +21,14 @@
     <script src="https://www.lactame.com/lib/image-js/0.21.2/image.min.js"></script>
     <script src="kmeans.js"></script>
     <script src="image.js"></script>
+    <script src="hex.js"></script>
     <script>
         console.log('script is running')
         async function process(input) {
             let reader = new FileReader();
             reader.onload = async function (e) {
                 let imageData = await IJS.Image.load(e.target.result)
-                let image = new Image(imageData, 3)
+                let image = new Image(imageData, 19)
 
                 imageData = image.export();
                 // use new image url for both the image and the link for the download
@@ -29,6 +38,9 @@
             }
             reader.readAsDataURL(input.files[0]);
         }
+        test1 = new ColorChooser(document.querySelector('.chooser'), 120, 200, 250);
+        test1.changeByTextInput(255, 'r')
+        test1.changeByDynamicInput();
     </script>
 
 </body>
