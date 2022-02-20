@@ -15,23 +15,52 @@
         console.log('script is running')
         class Image {
             /*
-                A class used specifically to decompose image.js images and apply kmeans to them
+                A class used specifically to decompose image.js images, apply kmeans to them, and then manipulate and export them
             */
+            image;
             height = 0;
             width = 0;
             pixels = [];
-            constructor(image) {
-                this.height = image.height;
-                this.width = image.width;
-                let rawRGB = image.getRGBAData();
-                // loop through the pixels, which are listed in [r,g,b,a] repeatedly and sort into rgb pixel vectors
-                for (let column = 0; column < this.width * this.height; ++column) {
-                    this.pixels.push([rawRGB[4 * column], rawRGB[4 * column + 1], rawRGB[4 * column + 2]])
-                }
+            clusterColors = [];
+            newColors = []
+            constructor(image, numClusters = 0) {
+                if(image)
+                    this.import(image);
+                if(numClusters)
+                    this.cluster(numClusters);
             }
             cluster(k) {
                 // cluster using kmeans and store
                 this.kmeans = kmeans(this.pixels, k);
+                this.clusterColors = this.newColors = this.kmeans.centroids;
+            }
+            import(image){
+                // after this function this image can be manipulated, the original pixel data is stored in this.pixels
+                this.image = image
+                this.height = this.image.height;
+                this.width = this.image.width;
+                let rawRGB = this.image.getRGBAData();
+                // loop through the pixels, which are listed in [r,g,b,a] repeatedly and sort into rgb pixel vectors
+                for (let column = 0; column < this.width * this.height; ++column) {
+                    
+                    this.pixels.push([rawRGB[4 * column], rawRGB[4 * column + 1], rawRGB[4 * column + 2]])
+                    
+                }
+            }
+            export(){
+                // create new image based on cluster
+
+                // go through each of the centroids
+                for (let c = 0; c < this.kmeans.clusters.length; ++c) {
+                    // go through each point assigned to each centroid
+                    for (let i = 0; i < this.kmeans.clusters[c].points.length; ++i) {
+                        this.image.setPixel(this.kmeans.clusters[c].points[i], [this.kmeans.centroids[c][0],
+                            this.kmeans.centroids[c][1], this.kmeans.centroids[c][2], 255
+                        ]);
+                    }
+
+                }
+                return this.image;
             }
         }
 
@@ -42,41 +71,17 @@
         async function process(input) {
             let reader = new FileReader();
             reader.onload = async function (e) {
-                console.log(e.target.result);
-
                 let imageData = await IJS.Image.load(e.target.result)
-                let image = new Image(imageData);
+                let image = new Image(imageData, 3)
 
-                // cluster data
-                image.cluster(20)
-
-                // image.kmeans.centroids[0] = [0,255,0]
-                // image.kmeans.centroids[1] = [0,0,255]
-                // image.kmeans.centroids[2] = [255,0,0]
-
-                // create new image based on cluster
-
-                // go through each of the centroids
-                for (let c = 0; c < image.kmeans.clusters.length; ++c) {
-                    // go through each point assigned to each centroid
-                    for (i = 0; i < image.kmeans.clusters[c].points.length; ++i) {
-                        imageData.setPixel(image.kmeans.clusters[c].points[i], [image.kmeans.centroids[c][0],
-                            image.kmeans.centroids[c][1], image.kmeans.centroids[c][2], 255
-                        ])
-                    }
-
-                }
-
+                imageData = image.export();
                 // use new image url for both the image and the link for the download
                 document.getElementById('result').src = imageData.toDataURL();
                 document.getElementById('download-link').href = imageData.toDataURL();
 
             }
             reader.readAsDataURL(input.files[0]);
-            // load image RGB data
-
         }
-        // process();
     </script>
 
 </body>
