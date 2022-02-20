@@ -6,9 +6,9 @@ class ColorChooser {
     rPicker;
     setColors = function (r = 0, g = 0, b = 0) {
         // store the values passed. I am choosing to take the modulo of any value passed to get it between the allowed values
-        this.r = Math.abs(r) % 256;
-        this.g = Math.abs(g) % 256;
-        this.b = Math.abs(b) % 256;
+        this.r = Math.floor(Math.abs(r) % 256);
+        this.g = Math.floor(Math.abs(g) % 256);
+        this.b = Math.floor(Math.abs(b) % 256);
     }
     getHexString = function () {
         let rHex = this.r.toString(16);

@@ -19,34 +19,32 @@
     <script src="image.js"></script>
     <script src="hex.js"></script>
     <script>
+        let chooserContainer = document.querySelector('#choosers');
+        let chooserControls = [];
         console.log('script is running')
         async function process(input) {
+            // reset the chooserContainer
+            chooserContainer.innerHTML = '';
             let reader = new FileReader();
             reader.onload = async function (e) {
                 let imageData = await IJS.Image.load(e.target.result)
-                let image = new Image(imageData, 19)
+                let image = new Image(imageData, 3)
 
                 imageData = image.export();
                 // use new image url for both the image and the link for the download
                 document.getElementById('result').src = imageData.toDataURL();
                 document.getElementById('download-link').href = imageData.toDataURL();
+                
+                // for each color create a way to change the hexvalue
+                for(let color of image.clusterColors){
+                    let chooser = createChooserHTML()
+                    chooserContainer.appendChild(chooser);
+                    chooserControls.push(new ColorChooser(chooser, color[0],color[1],color[2]));
+                }
 
             }
             reader.readAsDataURL(input.files[0]);
         }
-        
-
-        
-        
-        let testContainer = document.querySelector('#choosers');
-
-        let chooser = createChooserHTML()
-        testContainer.appendChild(chooser);
-        test2 = new ColorChooser(chooser)
-
-        chooser = createChooserHTML()
-        testContainer.appendChild(chooser);
-        test3 = new ColorChooser(chooser)
     </script>
 
 </body>
