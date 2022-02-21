@@ -39,8 +39,8 @@ class Image {
         for (let c = 0; c < this.kmeans.clusters.length; ++c) {
             // go through each point assigned to each centroid
             for (let i = 0; i < this.kmeans.clusters[c].points.length; ++i) {
-                this.image.setPixel(this.kmeans.clusters[c].points[i], [this.kmeans.centroids[c][0],
-                    this.kmeans.centroids[c][1], this.kmeans.centroids[c][2], 255
+                this.image.setPixel(this.kmeans.clusters[c].points[i], [this.newColors[c][0],
+                    this.newColors[c][1], this.newColors[c][2], 255
                 ]);
             }
 

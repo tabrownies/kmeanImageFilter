@@ -3,17 +3,22 @@
 
 <head>
     <link href="hex.css" type="text/css" rel="stylesheet">
+    <link href="style.css" type="text/css" rel="stylesheet">
 </head>
 
 <body>
+    <img id='result' />
+
+    <a download id="download-link">Download</a>
+    <input type="file" id="img" name="img" accept="image/*" onchange="process(this)">
+    <button onclick="changeColors()">Change Test</button>
+
     <div id="choosers">
 
     </div>
 
     <!-- <img id="color" src="taxi.jpeg" /> -->
-    <img id='result' />
-    <a download id="download-link">Download</a>
-    <input type="file" id="img" name="img" accept="image/*" onchange="process(this)">
+
     <script src="https://www.lactame.com/lib/image-js/0.21.2/image.min.js"></script>
     <script src="kmeans.js"></script>
     <script src="image.js"></script>
@@ -21,29 +26,54 @@
     <script>
         let chooserContainer = document.querySelector('#choosers');
         let chooserControls = [];
+
+        let imageData = null;
+        let image = null
+
         console.log('script is running')
+        // process new images using kmeans
         async function process(input) {
             // reset the chooserContainer
             chooserContainer.innerHTML = '';
+
+
+
             let reader = new FileReader();
             reader.onload = async function (e) {
-                let imageData = await IJS.Image.load(e.target.result)
-                let image = new Image(imageData, 3)
-
+                imageData = await IJS.Image.load(e.target.result)
+                image = new Image(imageData, 7);
                 imageData = image.export();
-                // use new image url for both the image and the link for the download
-                document.getElementById('result').src = imageData.toDataURL();
-                document.getElementById('download-link').href = imageData.toDataURL();
-                
+                updateImageURLs(imageData)
                 // for each color create a way to change the hexvalue
-                for(let color of image.clusterColors){
-                    let chooser = createChooserHTML()
+                for (let color of image.clusterColors) {
+                    let chooser = createChooserHTML('chooserControls[' + chooserControls.length + ']')
                     chooserContainer.appendChild(chooser);
-                    chooserControls.push(new ColorChooser(chooser, color[0],color[1],color[2]));
+                    chooserControls.push(new ColorChooser(chooser, color[0], color[1], color[2]));
                 }
 
             }
             reader.readAsDataURL(input.files[0]);
+        }
+
+        function changeColors() {
+            // break if there is no image to manipulate
+            if (!imageData) {
+                console.log('image not loaded yet')
+                return;
+            } else {
+                for (let i = 0; i < chooserControls.length; ++i) {
+                    image.newColors[i] = [chooserControls[i].r, chooserControls[i].g, chooserControls[i].b];
+                }
+            }
+            imageData = image.export();
+            updateImageURLs(imageData);
+
+        }
+        // use new image url for both the image and the link for the download
+        function updateImageURLs(imageData) {
+            document.getElementById('result').src = imageData.toDataURL();
+            document.getElementById('download-link').href = imageData.toDataURL();
+
         }
     </script>
 

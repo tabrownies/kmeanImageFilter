@@ -60,9 +60,10 @@ class ColorChooser {
 }
 
 // creates a chooser element
-function createChooserHTML() {
+// codeIdentifier is the what is passed into
+function createChooserHTML(codeIdentifier) {
     let chooser = document.createElement('div');
     chooser.setAttribute('class', 'chooser');
-    chooser.innerHTML = '<input type="color" class="color" value="#c8FFFF" onchange="test1.changeByDynamicInput()"></input><p class="value">R:<input class="R" value="200" type="number" onchange="test1.changeByTextInput(event.value, \'r\')">G:<input class="G" value="255" type="number" onchange="test1.changeByTextInput(event.value, \'g\')">B:<input class="B" value="255" type="number" onchange="test1.changeByTextInput(event.value, \'b\)"></p>'
+    chooser.innerHTML = '<input type="color" class="color" value="#c8FFFF" onchange="'+codeIdentifier+'.changeByDynamicInput()"></input><p class="value">R:<input class="R" value="200" type="number" onchange="'+codeIdentifier+'.changeByTextInput(event.value, \'r\')">G:<input class="G" value="255" type="number" onchange="'+codeIdentifier+'.changeByTextInput(event.value, \'g\')">B:<input class="B" value="255" type="number" onchange="'+codeIdentifier+'.changeByTextInput(event.value, \'b\)"></p>'
     return chooser;
 }
