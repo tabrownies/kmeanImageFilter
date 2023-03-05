@@ -2,20 +2,46 @@
 <html>
 
 <head>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
+      </style>
     <link href="hex.css" type="text/css" rel="stylesheet">
     <link href="style.css" type="text/css" rel="stylesheet">
 </head>
 
 <body>
-    <img id='result' />
-
-    <a download id="download-link">Download</a>
-    <input type="file" id="img" name="img" accept="image/*" onchange="process(this)">
-    <button onclick="changeColors()">Change Test</button>
-
-    <div id="choosers">
-
+    <header>
+        <h1>
+            KMeans Image Filter
+        </h1>
+        <nav>
+            <a href="tabrownies.github.io">Return to Main Site</a>
+        </nav>
+    </header>
+    <div id="mainImage">
+        <img src="taxi.jpeg">
     </div>
+    <div id="options">
+        <h2>Global Settings</h2>
+        <ul>
+            <li>
+                Number of Clusters: <input type="number">
+            </li>
+            <li>
+                Choose New Image:<button>Choose File</button>
+            </li>
+        </ul>
+        <h2>Color Values</h2>
+        <ul>
+
+        </ul>
+        <!-- <h2>Advanced Settings</h2>
+        <ul>
+
+        </ul> -->
+    </div>
+
+    
 
     <!-- <img id="color" src="taxi.jpeg" /> -->
 
@@ -41,7 +67,7 @@
             let reader = new FileReader();
             reader.onload = async function (e) {
                 imageData = await IJS.Image.load(e.target.result)
-                image = new Image(imageData, 7);
+                image = new Image(imageData, 30);
                 imageData = image.export();
                 updateImageURLs(imageData)
                 // for each color create a way to change the hexvalue

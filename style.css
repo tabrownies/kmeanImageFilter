@@ -1,0 +1,94 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing: border-box;
+}
+body{
+    background-color: rgb(2,4,9);
+    color: rgb(202,209,216);
+    font-family: "Roboto", Arial, Helvetica, sans-serif;
+}
+header{
+    background-color: rgb(23,27,33);
+    color: rgb(241,246,251);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+header h1{
+    font-size: 50px;
+    padding:30px;
+    padding-left:80px;
+    
+}
+header a{
+    color:inherit;
+    font-size:30px;
+    text-decoration-thickness: 1.5px;
+    padding:30px;
+    padding-right:50px;
+}
+header a:hover{
+    color:rgb(186,187,189);
+    text-decoration: none;
+}
+
+#options{
+    background-color: rgb(14,17,22);
+    border-left: rgb(34,38,44) solid 2px;
+}
+#options h2{
+    font-size:30px;
+    padding: 20px;
+    /* these two paddings give the look of an organized menu */
+    padding-bottom:5px;
+    padding-top:20px;
+}
+#options ul{
+    list-style: none;
+}
+#options li{
+    font-size: 20px;
+    padding:10px;
+    padding-left:35px;
+}
+
+/* desktop styles */
+/* layout with grid */
+body{
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 110px 1fr;
+    height:100vh;
+    width:100vw;
+}
+header{
+    grid-column-start: 1;
+    grid-column-end: 3;
+    grid-row-start: 1;
+    grid-row-end: 2;
+}
+#mainImage{
+    grid-column-start: 1;
+    grid-column-end: 2;
+    grid-row-start: 2;
+    grid-row-end: 3;
+    height:100%;
+    width:100%;
+}
+#options{
+    grid-column-start: 2;
+    grid-column-end: 3;
+    grid-row-start: 2;
+    grid-row-end: 3;
+    height:100%;
+    width:100%;
+}
+
+/* image positioning */
+/* TODO: write that you were trying a new way to organize CSS */
+#mainImage{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
