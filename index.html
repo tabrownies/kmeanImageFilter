@@ -25,7 +25,7 @@
         <h2>Global Settings</h2>
         <ul>
             <li>
-                Number of Clusters: <input type="number">
+                Number of Clusters: <input id="numClustersInput" type="number" onchange="set_num_clusters(event.target.value)">
             </li>
             <li>
                 Choose New Image:<button>Choose File</button>
@@ -50,6 +50,24 @@
     <script src="image.js"></script>
     <script src="hex.js"></script>
     <script>
+        // global variables defined by the options
+        let num_clusters = 5;
+        let num_cluster_input_tag = document.getElementById('numClustersInput');
+        function set_num_clusters(new_num_clusters, update_input_tag=true){
+            // set the number of clusters as a global variable
+            const UPPER_NUM_CLUSTERS_BOUND = 100; // the maximum number of clusters allowed by the application
+            // if the number of clusters suggested is out of bounds don't update. There could potentially be room to update better by setting high values to the max and non-positives values to 1
+            if (new_num_clusters > 0 && new_num_clusters < UPPER_NUM_CLUSTERS_BOUND){
+                num_clusters = new_num_clusters
+            }
+            // runs unless specified otherwise. Updates the DOM to match
+            if(update_input_tag){
+                num_cluster_input_tag.value = num_clusters
+            }
+        }
+        // run function initially to set number of clusters to 5
+        set_num_clusters(5)
+
         let chooserContainer = document.querySelector('#choosers');
         let chooserControls = [];
 
