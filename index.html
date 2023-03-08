@@ -23,17 +23,17 @@
         <img id="image">
     </div>
     <div id="options">
-        <h2>Global Settings</h2>
+        <h2>Global Settings: <button onclick="process()">Apply</button></h2>
         <ul>
             <li>
                 Number of Clusters: <input id="numClustersInput" type="number" onchange="set_num_clusters(event.target.value)">
             </li>
             <li>
-                Choose New Image:<input type="file" onchange="loadImage(event)">
+                Choose New Image:<input type="file" onchange="loadImage(event)" onmousedown="event.target.value=null">
             </li>
-            <button onclick="process()">Apply Filter</button>
+            
         </ul>
-        <h2>Color Values</h2>
+        <h2>Color Values: <button onclick="changeColors()">Apply</button></h2>
         <ul id="colorList">
             
         </ul>
@@ -77,19 +77,24 @@
         // run function initially to set number of clusters to 5
         set_num_clusters(5)
         // save new image
+
         async function loadImage(event) {
+            console.log('running')
             let reader = new FileReader();
             reader.onload = async function (e) {
                 imageData = await IJS.Image.load(e.target.result);
             }
             await reader.readAsDataURL(event.target.files[0]);
         }
+
+
         // use Kmeans to cluster
         async function process(){
             image = new Image(imageData, num_clusters);
             clusteredImageData = image.export();
             updateImageURLs(clusteredImageData);
             color_chooser_list = []
+            color_list_tag.innerHTML = ''
             // create the color editors
             for (let color of image.clusterColors) {
                 let chooser = createChooserHTML('color_chooser_list[' + color_chooser_list.length + ']')
