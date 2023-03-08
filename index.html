@@ -6,6 +6,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap');
       </style>
     <link href="style.css" type="text/css" rel="stylesheet">
+    <link href="hex.css" type="text/css" rel="stylesheet">
+
 </head>
 
 <body>
@@ -18,7 +20,7 @@
         </nav>
     </header>
     <div id="mainImage">
-        <img id="image" src="taxi.jpeg">
+        <img id="image">
     </div>
     <div id="options">
         <h2>Global Settings</h2>
@@ -32,8 +34,8 @@
             <button onclick="process()">Apply Filter</button>
         </ul>
         <h2>Color Values</h2>
-        <ul>
-
+        <ul id="colorList">
+            
         </ul>
         <!-- <h2>Advanced Settings</h2>
         <ul>
@@ -51,23 +53,25 @@
     <script src="hex.js"></script>
     <script>
         console.log('script is running')
-        // global variables defined by the options
+        // global variables
         let num_clusters = null;
         let imageData = null;
+        let image = null;
         let clusteredImageData = null;
         let num_cluster_input_tag = document.getElementById('numClustersInput');
-        
+        let color_list_tag = document.getElementById('colorList')
+        let color_chooser_list = []
 
         function set_num_clusters(new_num_clusters, update_input_tag=true){
             // set the number of clusters as a global variable
             const UPPER_NUM_CLUSTERS_BOUND = 100; // the maximum number of clusters allowed by the application
             // if the number of clusters suggested is out of bounds don't update. There could potentially be room to update better by setting high values to the max and non-positives values to 1
             if (new_num_clusters > 0 && new_num_clusters < UPPER_NUM_CLUSTERS_BOUND){
-                num_clusters = Number(new_num_clusters)
+                num_clusters = Number(new_num_clusters);
             }
             // runs unless specified otherwise. Updates the DOM to match
             if(update_input_tag){
-                num_cluster_input_tag.value = num_clusters
+                num_cluster_input_tag.value = num_clusters;
             }
         }
         // run function initially to set number of clusters to 5
@@ -76,31 +80,42 @@
         async function loadImage(event) {
             let reader = new FileReader();
             reader.onload = async function (e) {
-                imageData = await IJS.Image.load(e.target.result)
+                imageData = await IJS.Image.load(e.target.result);
             }
             await reader.readAsDataURL(event.target.files[0]);
         }
-
+        // use Kmeans to cluster
         async function process(){
             image = new Image(imageData, num_clusters);
             clusteredImageData = image.export();
-            updateImageURLs(clusteredImageData)
+            updateImageURLs(clusteredImageData);
+            color_chooser_list = []
+            // create the color editors
+            for (let color of image.clusterColors) {
+                let chooser = createChooserHTML('color_chooser_list[' + color_chooser_list.length + ']')
+                color_list_tag.appendChild(chooser);
+                color_chooser_list.push(new ColorChooser(chooser, color[0], color[1], color[2]));
+            }
         }
 
-        // function changeColors() {
-        //     // break if there is no image to manipulate
-        //     if (!imageData) {
-        //         console.log('image not loaded yet')
-        //         return;
-        //     } else {
-        //         for (let i = 0; i < chooserControls.length; ++i) {
-        //             image.newColors[i] = [chooserControls[i].r, chooserControls[i].g, chooserControls[i].b];
-        //         }
-        //     }
-        //     imageData = image.export();
-        //     updateImageURLs(imageData);
+        
 
-        // }
+
+
+        function changeColors() {
+            // break if there is no image to manipulate
+            if (!clusteredImageData) {
+                console.log('image not loaded yet')
+                return;
+            } else {
+                for (let i = 0; i < color_chooser_list.length; ++i) {
+                    image.newColors[i] = [color_chooser_list[i].r, color_chooser_list[i].g, color_chooser_list[i].b];
+                }
+            }
+            clusteredImageData = image.export();
+            updateImageURLs(clusteredImageData);
+
+        }
         // // use new image url for both the image and the link for the download
         function updateImageURLs(data) {
             document.getElementById('image').src = data.toDataURL();
