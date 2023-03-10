@@ -29,7 +29,7 @@ class ColorChooser {
     }
     setDynamicInput = function () {
         this.dynamicPicker.value = this.getHexString();
-        this.dynamicPicker.style.backgroundColor = this.getHexString()
+        // this.dynamicPicker.style.backgroundColor = this.getHexString()
     }
     changeByTextInput = function () {
         this.setColors(this.rPicker.value, this.gPicker.value, this.bPicker.value)
